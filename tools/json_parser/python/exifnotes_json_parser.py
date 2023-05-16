@@ -132,9 +132,11 @@ def create_user_comment(roll):
     if text is not None:
         roll['userComment'] = text
 
-def write_exiftool_cmds(frame, roll, file_extension):
+def write_exiftool_cmds(frame, roll, file_extension, verbose):
     # Write exiftool commands to stdout
     record = "exiftool"
+    if verbose:
+        record += " -v"
     # Append each mapped tag from frame data
     for dict_key, json_key in FRAME_KEY_MAPPING.items():
         if json_key in frame:
@@ -181,33 +183,33 @@ def write_exiftool_cmds(frame, roll, file_extension):
 
 
 def print_help():
-    print('Usage: python exifnotes_json_parser.py [OPTIONS] [filename.json]')
-    print('Options:')
-    print('  -h, --help               Print help text')
-    print('  -x, --ext <extension>    Set the file extension to use in exiftool commands (default: tif)')
-
+    print("Usage: python exifnotes_json_parser.py [OPTIONS] [FILENAME.JSON]")
+    print("Options:")
+    print("  -h, --help                  Print help text")
+    print("  -v, --verbose               Verbose mode (for now, just in exiftool commands)")
+    print("  -x, --ext=EXTENSION         Set the file extension (jpg, jpeg, tif, tiff)")
+    print("  -a, --artist=ARTIST         Set the artist name")
+    print("  -c, --copyright=COPYRIGHT   Set the copyright string")
 
 def main():
+    verbose = False
     input_file_path = "exifnotes.json"
     file_extension = "tif"
     artist = "me"
-    copyright = "©me"
+    copyright = "© me"
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hx:a:c:", ["help", "ext=", "artist=", "copyright="])
+        opts, args = getopt.getopt(sys.argv[1:], "hvx:a:c:", ["help", "verbose", "ext=", "artist=", "copyright="])
     except getopt.GetoptError:
         print("Invalid command line arguments. Use --help or -h for usage instructions.")
         return
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print("Usage: python exifnotes_json_parser.py [OPTIONS] [FILENAME.JSON]")
-            print("Options:")
-            print("  -h, --help                  Print help text")
-            print("  -x, --ext=EXTENSION         Set the file extension (jpg, jpeg, tif, tiff)")
-            print("  -a, --artist=ARTIST         Set the artist name")
-            print("  -a, --copyright=COPYRIGHT   Set the copyright string")
+            print_help()
             return
+        elif opt in ("-v", "--verbose"):
+            verbose = True
         elif opt in ("-x", "--ext"):
             if arg.lower() in ("jpg", "jpeg", "tif", "tiff"):
                 file_extension = arg.lower()
@@ -253,7 +255,7 @@ def main():
     # Process each frame
     frames = data['frames']
     for frame in frames:
-        write_exiftool_cmds(frame, roll, file_extension)
+        write_exiftool_cmds(frame, roll, file_extension, verbose)
         print()  # Add a blank line between records
 
 
