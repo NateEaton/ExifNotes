@@ -30,9 +30,10 @@ At some point, I may take a dive into Android app development at which point my 
     Usage: python exifnotes_json_parser.py [OPTIONS] [FILENAME.JSON]
     Options:
     -h, --help                  Print help text
+    -v, --verbose               Verbose mode (for now, just in exiftool commands)
     -x, --ext=EXTENSION         Set the file extension (jpg, jpeg, tif, tiff)
     -a, --artist=ARTIST         Set the artist name
-    -a, --copyright=COPYRIGHT   Set the copyright string
+    -c, --copyright=COPYRIGHT   Set the copyright string
 
 ## To Do
 
