@@ -1,0 +1,94 @@
+import getopt
+import yaml
+import os
+
+# ...
+
+CONFIG_DEFAULT_PATH = os.path.expanduser("~")
+CONFIG_DEFAULT_FILENAME = "exifnotes_json_parser.yaml"
+CONFIG_DEFAULT_EXTENSION = "tif"
+CONFIG_DEFAULT_ARTIST = None
+CONFIG_DEFAULT_COPYRIGHT = None
+
+def load_config(config_path, config_filename):
+    config_file = os.path.join(config_path, config_filename)
+
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as file:
+            config = yaml.safe_load(file)
+
+            default_extension = config.get("default_extension", CONFIG_DEFAULT_EXTENSION)
+            default_artist = config.get("default_artist", CONFIG_DEFAULT_ARTIST)
+            default_copyright = config.get("default_copyright", CONFIG_DEFAULT_COPYRIGHT)
+
+            return default_extension, default_artist, default_copyright
+
+    return CONFIG_DEFAULT_EXTENSION, CONFIG_DEFAULT_ARTIST, CONFIG_DEFAULT_COPYRIGHT
+
+
+def main():
+    # ...
+
+    # Get command line options
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "x:a:c:", ["ext=", "artist=", "copyright=", "config-path=", "config-name=", "help"])
+    except getopt.GetoptError as err:
+        print(str(err))
+        print_usage()
+        sys.exit(2)
+
+    # Default configuration values
+    config_path = CONFIG_DEFAULT_PATH
+    config_filename = CONFIG_DEFAULT_FILENAME
+
+    # Command line option values
+    extension = None
+    artist = None
+    copyright = None
+
+    # Process command line options
+    for opt, arg in opts:
+        if opt in ("-x", "--ext"):
+            extension = arg.lower()
+        elif opt in ("-a", "--artist"):
+            artist = arg
+        elif opt in ("-c", "--copyright"):
+            copyright = arg
+        elif opt == "--config-path":
+            config_path = arg
+        elif opt == "--config-name":
+            config_filename = arg
+        elif opt == "--help":
+            print_usage()
+            sys.exit()
+
+    # Load configuration from YAML file
+    default_extension, default_artist, default_copyright = load_config(config_path, config_filename)
+
+    # Apply configuration values
+    extension = extension or default_extension
+    artist = artist or default_artist
+    copyright = copyright or default_copyright
+
+    # ...
+
+    # Flatten the JSON data into the "roll" dictionary
+    roll = flatten_json(data, 'frames')
+
+    # Parse the "note" field if present
+    if 'note' in data:
+        parse_note_field(data['note'], roll)
+
+    # Update roll dictionary with configuration values
+    if artist is not None:
+        roll["Artist"] = artist
+    if copyright is not None:
+        roll["Copyright"] = copyright
+
+    # Process each frame
+    frames = data['frames']
+    for frame in frames:
+        write_exiftool_cmds(frame, roll, extension)
+        print()  # Add a blank line between records
+
+# ...
