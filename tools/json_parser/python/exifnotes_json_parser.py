@@ -7,12 +7,12 @@ import datetime
 ROLL_KEY_MAPPING = {
     "Make": "cameraMake",
     "Model": "cameraModel",
-    "UserComment": "userComment",
+#    "UserComment": "userComment",
     "Artist": "artist",
     "Copyright": "copyright"
 }
 
-NOTE_KEY_MAPPING = {
+ROLL_NOTE_KEY_MAPPING = {
     "FilmStockMake": "filmStockMake",
     "FilmStockModel": "filmStockModel",
     "FilmStockIso": "filmStockIso",
@@ -31,9 +31,14 @@ FRAME_KEY_MAPPING = {
     "Location": "location",
     "FocalLength": "focalLength",
     "LightSource": "lightSource",
-    "ImageDescription": "note"
+    "ImageDescription": "imageDescription",
+    "UserComment": "userComment"
 }
 
+FRAME_NOTE_KEY_MAPPING = {
+    "ShutterLeverAfterShot":"shutterleveraftershot",
+    "ExposureBasedOn":"exposurebasedon"
+}
 
 def open_input_file(file_path):
     try:
@@ -47,6 +52,10 @@ def open_input_file(file_path):
 def escape_quotes(value):
     return value.replace('"', r'\"')
 
+def escape_parens(value):
+    text = value.replace('(', r'\(')
+    text = text.replace(')', r'\)')
+    return text
 
 def strip_quotes(value):
     return value.replace('"', r'')
@@ -104,6 +113,21 @@ def parse_note_field(note, roll):
     except yaml.YAMLError as e:
         print(f"Error parsing note as YAML: {e}")
 
+def parse_frame_level_note_frame(note, frame):
+    try:
+        yaml_data = yaml.safe_load(note)
+        if isinstance(yaml_data, dict):
+            for key, value in yaml_data.items():
+                if key == 'Subject':
+                        frame['imageDescription'] = frame.get('imageDescription', '') + 'Subject: ' + value.replace('\n', ' ') + ' '
+                elif key == 'Notes':
+                        frame['imageDescription'] = frame.get('imageDescription', '') + 'Notes: ' + value.replace('\n', ' ') + ' '
+                else:
+                    frame[key.lower()] = value
+    except yaml.YAMLError as e:
+        print(f"Error parsing frame-level note as YAML: {e}")
+
+
 def flatten_yaml_keys(prefix, yaml_data, roll):
     for key, value in yaml_data.items():
         if isinstance(value, dict):
@@ -120,7 +144,7 @@ def flatten_yaml_keys(prefix, yaml_data, roll):
 
 def create_user_comment(roll):
     text = ""
-    for dict_key, json_key in NOTE_KEY_MAPPING.items():
+    for dict_key, json_key in ROLL_NOTE_KEY_MAPPING.items():
         if json_key in roll:
             value = roll[json_key]
             if value is not None:
@@ -137,6 +161,18 @@ def write_exiftool_cmds(frame, roll, file_extension, verbose):
     record = "exiftool"
     if verbose:
         record += " -v"
+
+    # Append UserComment with frame-level note data
+    frame['userComment'] = roll['userComment']
+    for dict_key, json_key in FRAME_NOTE_KEY_MAPPING.items():
+        if json_key in frame:
+            value = frame[json_key]
+            if value is not None:
+                if frame['userComment'] is not None:
+                    frame['userComment'] += f' | {dict_key}: {value}'
+                else:
+                    frame['userComment'] += f'{dict_key}: {value}'
+
     # Append each mapped tag from frame data
     for dict_key, json_key in FRAME_KEY_MAPPING.items():
         if json_key in frame:
@@ -147,19 +183,19 @@ def write_exiftool_cmds(frame, roll, file_extension, verbose):
                     latValue = frame[json_key]['latitude']
                     if longValue is not None and latValue is not None:
                         if longValue > 0:
-                            longRefTag = f' -GPSLongitudeRef="E"'
+                            longRefTag = f" -GPSLongitudeRef='E'"
                         else:
-                            longRefTag = f' -GPSLongitudeRef="W"'
+                            longRefTag = f" -GPSLongitudeRef='W'"
                             longValue = longValue * -1
                         longValueStr = convert_to_exif_dms(longValue)
-                        longTag = f' -GPSLongitude="{longValueStr}"'
+                        longTag = f" -GPSLongitude='{longValueStr}'"
                         if latValue > 0:
-                            latRefTag = f' -GPSLatitudeRef="N"'
+                            latRefTag = f" -GPSLatitudeRef='N'"
                         else:
-                            latRefTag = f' -GPSLatitudeRef="S"'
+                            latRefTag = f" -GPSLatitudeRef='S'"
                             latValue = longValue * -1
                         latValueStr = convert_to_exif_dms(latValue)
-                        latTag = f' -GPSLatitude="{latValueStr}"'
+                        latTag = f" -GPSLatitude='{latValueStr}'"
                         record += longTag + longRefTag + latTag + latRefTag
                 else:
                     if json_key =='date':
@@ -167,16 +203,18 @@ def write_exiftool_cmds(frame, roll, file_extension, verbose):
                     if json_key == 'shutter':
                         value = strip_quotes(value)
                     if isinstance(value, str):
-                        value = f'"{value}"'
+                        value = f"'{value}'"
                     record += f" -{dict_key}={value}"
+
     # Append each mapped tag from roll data
     for dict_key, json_key in ROLL_KEY_MAPPING.items():
         if json_key in roll:
             value = roll[json_key]
             if value is not None:
                 if isinstance(value, str):
-                    value = f'"{value}"'
+                    value = f"'{value}'"
                 record += f" -{dict_key}={value}"
+
     # Append file name pattern with the given file extension
     record += f" *0{frame['count']}.{file_extension}"
     print(record)
@@ -245,7 +283,7 @@ def main():
     if 'note' in data:
         parse_note_field(data['note'], roll)
 
-    # Create value for UserComment containing film data forwhich there isn't a standard EXIF tag
+    # Create value for UserComment containing film data for which there isn't a standard EXIF tag
     create_user_comment(roll)
 
     # Add personal data
@@ -255,6 +293,9 @@ def main():
     # Process each frame
     frames = data['frames']
     for frame in frames:
+        if 'note' in frame:
+            parse_frame_level_note_frame(frame['note'], frame)
+
         write_exiftool_cmds(frame, roll, file_extension, verbose)
         print()  # Add a blank line between records
 

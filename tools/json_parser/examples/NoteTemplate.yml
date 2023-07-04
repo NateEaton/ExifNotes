@@ -1,3 +1,4 @@
+# Film Roll
 Roll:
   Subject: xxx
   Note: xxx
@@ -13,4 +14,9 @@ Scanned:
   ScanQuality: High
   ScanFileType: TIFF
   ScanBitDepth: 16
-   
+
+# Frames
+Subject: xxx
+Notes: xxx
+ShutterLeverAfterShot: Up
+ExposureBasedOn: WBPhoto Light Meter App

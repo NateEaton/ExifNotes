@@ -15,6 +15,9 @@ See the example JSON output and YAML template. I've also included versions of ex
 
 At some point, I may take a dive into Android app development at which point my goal would be to add features to the app that make this tool obsolete. 
 
+**UPDATE July 2023:**
+Added support for parsing YAML in the frame-level Note field. Two fields are used to format the ImageDescription tag, Subject and Notes. Any other YAML elements (I have two defined that meet my needs, ShutterLeverAfterShot and ExposureBasedOn) are appended as name/value pairs to the UserComment tag.  
+
 ## Workflow
 
 1. Capture information on the roll and each frame while shooting (or soon after).

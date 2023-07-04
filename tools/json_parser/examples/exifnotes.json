@@ -44,7 +44,7 @@
             "date": "2023-05-09T15:55",
             "shutter": "1/60",
             "aperture": "11",
-            "note": "Perspective shot down railroad near Ash Creek",
+            "note": "Subject: Perspective shot down railroad near Ash Creek.\nShutterLeverAfterShot: Down\nExposureBasedOn: WBPhoto Light Meter App",
             "location": {
                 "latitude": 32.812151872768375,
                 "longitude": -96.70957736670971
@@ -61,7 +61,7 @@
             "date": "2023-05-07T20:10",
             "shutter": "33\"",
             "aperture": "22",
-            "note": "Sailboats at sunset. Light meter app read 15 sec, used 1.3 power factor.",
+            "note": "Subject: Sailboats at sunset.\nNotes: Light meter app read 15 sec, used 1.3 power factor.\nShutterLeverAfterShot: Up\nExposureBasedOn: WBPhoto Light Meter App",
             "location": {
                 "latitude": 32.846405900479404,
                 "longitude": -96.71730883419514
@@ -78,7 +78,7 @@
             "date": "2023-05-07T20:05",
             "shutter": "5\"",
             "aperture": "16",
-            "note": "Sailboats at sunset. ",
+            "note": "Subject: Sailboats at sunset.\nShutterLeverAfterShot: Down\nExposureBasedOn: WBPhoto Light Meter App",
             "location": {
                 "latitude": 32.84640928057598,
                 "longitude": -96.71730816364288
